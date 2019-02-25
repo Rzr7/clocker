@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 
 @Transactional
@@ -89,12 +91,28 @@ public class UserDAO implements IUserDAO {
     public boolean userExists(String username, String email) {
         String sql = "SELECT count(*) " +
                 "FROM users " +
-                "WHERE username = ? and email=?";
+                "WHERE username = ? or email=?";
         int count = jdbcTemplate.queryForObject(
                 sql,
                 Integer.class,
                 username,
                 email);
+        if(count == 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public boolean authTokenExists(String token) {
+        String sql = "SELECT count(*) " +
+                "FROM users " +
+                "WHERE authToken = ?";
+        int count = jdbcTemplate.queryForObject(
+                sql,
+                Integer.class,
+                token);
         if(count == 0) {
             return false;
         } else {
@@ -131,5 +149,62 @@ public class UserDAO implements IUserDAO {
             return user.getAuthToken();
         }
         return null;
+    }
+
+    @Override
+    public String getUserAuthTokenByUsername(String username) {
+        User user = null;
+        String sql = "SELECT authToken " +
+                "FROM users " +
+                "WHERE username = ?";
+        RowMapper<User> rowMapper = new BeanPropertyRowMapper<User>(User.class);
+        user = jdbcTemplate.queryForObject(sql, rowMapper, username);
+        if(user != null) {
+            return user.getAuthToken();
+        }
+        return null;
+    }
+
+    @Override
+    public String generateUserToken(String username) {
+        User user = null;
+        String sql = "UPDATE users " +
+                "SET authToken = ? " +
+                "WHERE username = ?";
+        RowMapper<User> rowMapper = new BeanPropertyRowMapper<User>(User.class);
+        String authToken = this.generateSafeToken();
+        jdbcTemplate.update(sql,
+                authToken,
+                username);
+
+        return authToken;
+    }
+
+
+    @Override
+    public User getUserByAuthToken(String token) {
+        User user = null;
+        if (token != null) {
+            if (this.authTokenExists(token)) {
+                String sql = "SELECT id, username, name, email " +
+                        "FROM users " +
+                        "WHERE authToken = ?";
+                RowMapper<User> rowMapper = new BeanPropertyRowMapper<User>(User.class);
+                user = jdbcTemplate.queryForObject(sql, rowMapper, token);
+                if (user != null) {
+                    return user;
+                }
+            }
+        }
+        return null;
+    }
+
+    private String generateSafeToken() {
+        SecureRandom random = new SecureRandom();
+        byte bytes[] = new byte[20];
+        random.nextBytes(bytes);
+        Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
+        String token = encoder.encodeToString(bytes);
+        return token;
     }
 }

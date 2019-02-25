@@ -1,8 +1,13 @@
 package com.clocker.controller;
 
+import com.clocker.entity.Auth;
+import com.clocker.entity.LoginForm;
 import com.clocker.entity.User;
 import com.clocker.service.IUserService;
 import com.clocker.util.Password;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,38 +36,63 @@ public class UserController {
     }
 
     @PostMapping("user")
-    public ResponseEntity<Void> addUser(@RequestBody User user, UriComponentsBuilder builder) {
+    public ResponseEntity<String> addUser(@RequestBody User user, UriComponentsBuilder builder) {
 
         // Generate hash for user password.
         String notHashedPassword = user.getPassword();
         String hashedPassword = Password.hashPassword(notHashedPassword);
         user.setPassword(hashedPassword);
 
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode arrayNode = mapper.createArrayNode();
+        ObjectNode authStatus = mapper.createObjectNode();
+
         boolean flag = userService.addUser(user);
         if (flag == false) {
-            return new ResponseEntity<Void>(HttpStatus.CONFLICT);
+            authStatus.put("status", "error");
+            arrayNode.add(authStatus);
+            return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.CONFLICT);
         }
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(builder.path("/user/{id}").buildAndExpand(user.getId()).toUri());
-        return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
+        authStatus.put("status", "success");
+        authStatus.put("token", userService.generateUserToken(user));
+        arrayNode.add(authStatus);
+        return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.CREATED);
     }
 
     @PostMapping("auth")
-    public ResponseEntity<String> authUser(@RequestBody User user, UriComponentsBuilder builder) {
+    public ResponseEntity<String> authUser(@RequestBody LoginForm user, UriComponentsBuilder builder) {
         boolean response = userService.authUser(user);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode arrayNode = mapper.createArrayNode();
+        ObjectNode authStatus = mapper.createObjectNode();
+
         if (response == false) {
-            return new ResponseEntity<String>("Invalid credentials", HttpStatus.FORBIDDEN);
+            authStatus.put("status", "error");
+            arrayNode.add(authStatus);
+            return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.FORBIDDEN);
         }
-        return new ResponseEntity<String>("Auth success", HttpStatus.OK);
+        authStatus.put("status", "success");
+        authStatus.put("token", userService.generateUserToken(user));
+        arrayNode.add(authStatus);
+        return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.OK);
     }
 
-    @GetMapping("isAuthenticated/{token}/{id}")
-    public ResponseEntity<String> isUserAuthenticated(@PathVariable("token") String token, @PathVariable("id") Integer id) {
-        boolean isAuth = userService.isUserAuthenticated(token, id);
+    @PostMapping("isAuthenticated")
+    public ResponseEntity<String> isUserAuthenticated(@RequestBody Auth token) {
+        boolean isAuth = userService.isUserAuthenticated(token);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode arrayNode = mapper.createArrayNode();
+        ObjectNode authStatus = mapper.createObjectNode();
         if (isAuth) {
-            return new ResponseEntity<String>("Authenticated", HttpStatus.OK);
+            authStatus.put("status", "success");
+            arrayNode.add(authStatus);
+            return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.OK);
         }
-        return new ResponseEntity<String>("Not Authenticated", HttpStatus.UNAUTHORIZED);
+        authStatus.put("status", "error");
+        arrayNode.add(authStatus);
+        return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.UNAUTHORIZED);
     }
 
     @PutMapping("user")

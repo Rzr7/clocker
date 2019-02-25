@@ -1,5 +1,7 @@
 package com.clocker.service;
 
+import com.clocker.entity.Auth;
+import com.clocker.entity.LoginForm;
 import com.clocker.entity.User;
 
 import java.util.List;
@@ -10,7 +12,11 @@ public interface IUserService {
     boolean addUser(User user);
     void updateUser(User user);
     void deleteUser(int id);
-    boolean authUser(User user);
+    boolean authUser(LoginForm user);
     User getUserByUsername(String username);
-    boolean isUserAuthenticated(String token, Integer id);
+    String getUserToken(LoginForm login);
+    String getUserToken(User user);
+    String generateUserToken(User user);
+    String generateUserToken(LoginForm user);
+    boolean isUserAuthenticated(Auth token);
 }

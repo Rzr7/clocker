@@ -1,6 +1,8 @@
 package com.clocker.service;
 
 import com.clocker.dao.IUserDAO;
+import com.clocker.entity.Auth;
+import com.clocker.entity.LoginForm;
 import com.clocker.entity.User;
 import com.clocker.util.Password;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +38,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public synchronized boolean authUser(User user){
+    public synchronized boolean authUser(LoginForm user){
         if (userDAO.userExists(user.getUsername())) {
             // if user exists check passwords
             User userModel = userDAO.getUserByUsername(user.getUsername());
@@ -60,12 +62,68 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public boolean isUserAuthenticated(String token, Integer id){
-        String authUserToken = userDAO.getUserAuthToken(id);
-        if (token.equals(authUserToken)) {
+    public boolean isUserAuthenticated(Auth token){
+        User user = null;
+        if (token.getAuthToken() != null) {
+            user = userDAO.getUserByAuthToken(token.getAuthToken());
+        }
+
+        if (user != null) {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String getUserToken(LoginForm login){
+        String token = null;
+        if (login.getUsername() != null) {
+            token = userDAO.getUserAuthTokenByUsername(login.getUsername());
+        }
+
+        if (token != null) {
+            return token;
+        }
+        return null;
+    }
+
+    @Override
+    public String getUserToken(User user){
+        String token = null;
+        if (user.getUsername() != null) {
+            token = userDAO.getUserAuthTokenByUsername(user.getUsername());
+        }
+
+        if (token != null) {
+            return token;
+        }
+        return null;
+    }
+
+    @Override
+    public String generateUserToken(User user){
+        String token = null;
+        if (user.getUsername() != null) {
+            token = userDAO.generateUserToken(user.getUsername());
+        }
+
+        if (token != null) {
+            return token;
+        }
+        return null;
+    }
+
+    @Override
+    public String generateUserToken(LoginForm user){
+        String token = null;
+        if (user.getUsername() != null) {
+            token = userDAO.generateUserToken(user.getUsername());
+        }
+
+        if (token != null) {
+            return token;
+        }
+        return null;
     }
 
     @Override
