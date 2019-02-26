@@ -1,6 +1,7 @@
 package com.clocker.controller;
 
 import com.clocker.entity.Auth;
+import com.clocker.entity.AuthUser;
 import com.clocker.entity.LoginForm;
 import com.clocker.entity.User;
 import com.clocker.service.IUserService;
@@ -86,8 +87,14 @@ public class UserController {
         ArrayNode arrayNode = mapper.createArrayNode();
         ObjectNode authStatus = mapper.createObjectNode();
         if (isAuth) {
+            AuthUser authUser = userService.getAuthenticatedUser(token);
+
             authStatus.put("status", "success");
+            authStatus.put("username", authUser.getUsername());
+            authStatus.put("name", authUser.getName());
+            authStatus.put("email", authUser.getEmail());
             arrayNode.add(authStatus);
+
             return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.OK);
         }
         authStatus.put("status", "error");

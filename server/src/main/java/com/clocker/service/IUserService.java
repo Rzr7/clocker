@@ -1,6 +1,7 @@
 package com.clocker.service;
 
 import com.clocker.entity.Auth;
+import com.clocker.entity.AuthUser;
 import com.clocker.entity.LoginForm;
 import com.clocker.entity.User;
 
@@ -18,5 +19,6 @@ public interface IUserService {
     String getUserToken(User user);
     String generateUserToken(User user);
     String generateUserToken(LoginForm user);
+    AuthUser getAuthenticatedUser(Auth token);
     boolean isUserAuthenticated(Auth token);
 }

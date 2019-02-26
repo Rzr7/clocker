@@ -2,6 +2,7 @@ package com.clocker.service;
 
 import com.clocker.dao.IUserDAO;
 import com.clocker.entity.Auth;
+import com.clocker.entity.AuthUser;
 import com.clocker.entity.LoginForm;
 import com.clocker.entity.User;
 import com.clocker.util.Password;
@@ -63,7 +64,7 @@ public class UserService implements IUserService {
 
     @Override
     public boolean isUserAuthenticated(Auth token){
-        User user = null;
+        AuthUser user = null;
         if (token.getAuthToken() != null) {
             user = userDAO.getUserByAuthToken(token.getAuthToken());
         }
@@ -122,6 +123,19 @@ public class UserService implements IUserService {
 
         if (token != null) {
             return token;
+        }
+        return null;
+    }
+
+    @Override
+    public AuthUser getAuthenticatedUser(Auth token){
+        AuthUser user = null;
+        if (token.getAuthToken() != null) {
+            user = userDAO.getUserByAuthToken(token.getAuthToken());
+        }
+
+        if (user != null) {
+            return user;
         }
         return null;
     }

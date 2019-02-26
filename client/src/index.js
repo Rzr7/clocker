@@ -6,7 +6,7 @@ import Login from './Login';
 import NotFound from './NotFound';
 import Logout from './Logout';
 import * as serviceWorker from './serviceWorker';
-import { Route, Link, BrowserRouter as Router, Switch } from 'react-router-dom'
+import { Route, BrowserRouter as Router, Switch } from 'react-router-dom'
 
 const routing = (
     <Router>

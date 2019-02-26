@@ -1,24 +1,18 @@
 import React, { Component } from 'react';
 import './App.css';
-import $ from "jquery";
-import axios from "axios";
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import checkAuth from './Functions'
 
-library.add(faCheck)
-
 class App extends Component {
-  state = {};
-  constructor(props, context) {
-    super(props, context);
-  }
+  state = {
+    viewData: {}
+  };
 
   componentDidMount() {
-    checkAuth().then(function(result) {
+    checkAuth().then((result) => {
       if (!result) {
         window.location.replace("/");
+      } else {
+        this.setState({ viewData: result });
       }
     });
   }
@@ -29,7 +23,8 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        
+        <div className="simple-text">You are logged in as: {this.state.viewData.username}</div>
+        <div className="simple-logout"><a href="/logout">Logout</a></div>
       </div>
     );
   }

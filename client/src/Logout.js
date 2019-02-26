@@ -1,11 +1,7 @@
 import React from 'react'
 
 class Logout extends React.Component {
-    state = {};
-    constructor(props, context) {
-      super(props, context);
-    }
-  
+
     componentDidMount() {
         this.logout();
     }
