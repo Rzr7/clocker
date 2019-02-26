@@ -134,6 +134,10 @@ class Login extends Component {
       }
   
     });
+
+    $('.input input').on('click', function() {
+      $(this).css('border', 'none');
+    })
   }
 
   auth = () => {
@@ -148,7 +152,8 @@ class Login extends Component {
         }
     })
     .catch(function (error) {
-      console.log(error);
+      $('#name').css('border', '2px solid red');
+      $('#pass').css('border', '2px solid red');
     });
   }
 
@@ -165,7 +170,17 @@ class Login extends Component {
         }
       })
       .catch(function (error) {
-        console.log(error);
+        if (error.response.data[0].status === "error") {
+          if (error.response.data[1].username) {
+            $('#regname').css('border', '2px solid #ffeb00');
+          }
+          if (error.response.data[1].password) {
+            $('#regpass').css('border', '2px solid #ffeb00');
+          }
+          if (error.response.data[1].email) {
+            $('#regemail').css('border', '2px solid #ffeb00');
+          }
+        }
       });
   }
   render() {
