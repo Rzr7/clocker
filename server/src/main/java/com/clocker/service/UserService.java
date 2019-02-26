@@ -1,10 +1,7 @@
 package com.clocker.service;
 
 import com.clocker.dao.IUserDAO;
-import com.clocker.entity.Auth;
-import com.clocker.entity.AuthUser;
-import com.clocker.entity.LoginForm;
-import com.clocker.entity.User;
+import com.clocker.entity.*;
 import com.clocker.util.Password;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -136,6 +133,33 @@ public class UserService implements IUserService {
 
         if (user != null) {
             return user;
+        }
+        return null;
+    }
+
+    @Override
+    public RegistrationErrors getRegistrationErrors(User user){
+        RegistrationErrors errors = new RegistrationErrors();
+
+        if (!(user.getUsername().length() > 0)) {
+            errors.setUsername(true);
+        }
+        if (!(user.getPassword().length() > 0)) {
+            errors.setPassword(true);
+        }
+        if (!(user.getEmail().length() > 0)) {
+            errors.setEmail(true);
+        }
+
+        if (!errors.isUsername()) {
+            if (userDAO.userExists(user.getUsername())) {
+                // Username already exists
+                errors.setUsername(true);
+            }
+        }
+
+        if (errors != null) {
+            return errors;
         }
         return null;
     }

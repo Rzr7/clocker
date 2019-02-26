@@ -1,9 +1,6 @@
 package com.clocker.controller;
 
-import com.clocker.entity.Auth;
-import com.clocker.entity.AuthUser;
-import com.clocker.entity.LoginForm;
-import com.clocker.entity.User;
+import com.clocker.entity.*;
 import com.clocker.service.IUserService;
 import com.clocker.util.Password;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,26 +35,37 @@ public class UserController {
 
     @PostMapping("user")
     public ResponseEntity<String> addUser(@RequestBody User user, UriComponentsBuilder builder) {
-
-        // Generate hash for user password.
-        String notHashedPassword = user.getPassword();
-        String hashedPassword = Password.hashPassword(notHashedPassword);
-        user.setPassword(hashedPassword);
-
         ObjectMapper mapper = new ObjectMapper();
         ArrayNode arrayNode = mapper.createArrayNode();
         ObjectNode authStatus = mapper.createObjectNode();
 
-        boolean flag = userService.addUser(user);
-        if (flag == false) {
-            authStatus.put("status", "error");
+        RegistrationErrors errors = userService.getRegistrationErrors(user);
+
+        if (!errors.isUsername() && !errors.isEmail() && !errors.isPassword()) {
+            // Generate hash for user password.
+            String notHashedPassword = user.getPassword();
+            String hashedPassword = Password.hashPassword(notHashedPassword);
+            user.setPassword(hashedPassword);
+
+            boolean flag = userService.addUser(user);
+            if (flag == false) {
+                authStatus.put("status", "error");
+                arrayNode.add(authStatus);
+                return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.CONFLICT);
+            }
+            authStatus.put("status", "success");
+            authStatus.put("token", userService.generateUserToken(user));
             arrayNode.add(authStatus);
-            return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.CONFLICT);
+            return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.CREATED);
         }
-        authStatus.put("status", "success");
-        authStatus.put("token", userService.generateUserToken(user));
+        authStatus.put("status", "error");
+        ObjectNode errorsNode = mapper.createObjectNode();
+        errorsNode.put("username", errors.isUsername());
+        errorsNode.put("password", errors.isPassword());
+        errorsNode.put("email", errors.isEmail());
         arrayNode.add(authStatus);
-        return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.CREATED);
+        arrayNode.add(errorsNode);
+        return new ResponseEntity<String>(arrayNode.toString(), HttpStatus.CONFLICT);
     }
 
     @PostMapping("auth")
