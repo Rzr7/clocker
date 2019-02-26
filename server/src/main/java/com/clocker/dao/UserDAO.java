@@ -1,5 +1,6 @@
 package com.clocker.dao;
 
+import com.clocker.entity.AuthUser;
 import com.clocker.entity.User;
 import com.clocker.entity.UserRowMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -182,14 +183,14 @@ public class UserDAO implements IUserDAO {
 
 
     @Override
-    public User getUserByAuthToken(String token) {
-        User user = null;
+    public AuthUser getUserByAuthToken(String token) {
+        AuthUser user = null;
         if (token != null) {
             if (this.authTokenExists(token)) {
                 String sql = "SELECT id, username, name, email " +
                         "FROM users " +
                         "WHERE authToken = ?";
-                RowMapper<User> rowMapper = new BeanPropertyRowMapper<User>(User.class);
+                RowMapper<AuthUser> rowMapper = new BeanPropertyRowMapper<AuthUser>(AuthUser.class);
                 user = jdbcTemplate.queryForObject(sql, rowMapper, token);
                 if (user != null) {
                     return user;

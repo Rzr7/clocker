@@ -11,9 +11,6 @@ library.add(faCheck)
 
 class Login extends Component {
   state = {};
-  constructor(props, context) {
-    super(props, context);
-  }
 
   componentDidMount() {
     checkAuth().then(function(result) {
@@ -39,7 +36,7 @@ class Login extends Component {
       $(".spin").css({
         "width": "0px"
       })
-      if ($(this).val() == "") {
+      if ($(this).val() === "") {
         $(this).parent(".input").each(function() {
             $("label", this).css({
               "line-height": "60px",
