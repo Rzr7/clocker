@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import checkAuth from './Functions'
+import HeaderMenu from './app/header'
 
 class App extends Component {
   state = {
@@ -23,8 +24,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <div className="simple-text">You are logged in as: {this.state.viewData.username}</div>
-        <div className="simple-logout"><a href="/logout">Logout</a></div>
+        <HeaderMenu username={this.state.viewData.username} />
       </div>
     );
   }
