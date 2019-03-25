@@ -10,12 +10,21 @@
     "@material-ui/icons": "^3.0.2",
     "@material-ui/styles": "^4.0.0-alpha.3",
     "axios": "^0.18.0",
+    "chartist": "0.10.1",
+    "classnames": "2.2.6",
+    "history": "4.7.2",
     "jquery": "^3.3.1",
     "material-ui": "^1.0.0-beta.47",
+    "perfect-scrollbar": "1.4.0",
+    "prettier": "1.16.4",
+    "prop-types": "15.7.1",
     "react": "^16.8.3",
+    "react-chartist": "0.13.3",
     "react-dom": "^16.8.3",
+    "react-google-maps": "9.4.5",
     "react-router-dom": "^4.3.1",
-    "react-scripts": "2.1.5"
+    "react-scripts": "^2.1.8",
+    "react-swipeable-views": "0.13.1"
   },
   "scripts": {
     "start": "react-scripts start",
