@@ -8,12 +8,15 @@ const timerStyle = {
         lineHeight: "50px",
     },
     timerWrapper: {
-        height: "50px !important"
+        height: "50px !important",
+        marginTop: "15px",
+        marginBottom: "15px",
+        position: "relative"
     },
     timerStartBtn: {
         position: "absolute !important",
         right: "7px",
-        top: "13px",
+        top: "1px",
     },
     timerTextWrapper: {
         display: "flex",
@@ -34,6 +37,10 @@ const timerStyle = {
         textAlign: "right",
         lineHeight: "50px",
         fontWeight: "600",
+    },
+    timerInput: {
+        fontSize: "21px",
+        marginTop: "0px !important"
     },
 };
 export default timerStyle;
