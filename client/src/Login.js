@@ -15,7 +15,7 @@ class Login extends Component {
   componentDidMount() {
     checkAuth().then(function(result) {
         if (result) {
-            window.location.replace("/app");
+            window.location.replace("/app/dashboard");
         }
     });
 

@@ -11,6 +11,7 @@ import Fab from '@material-ui/core/Fab';
 import Icon  from '@material-ui/core/Icon';
 import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
+import CustomInput from "components/CustomInput/CustomInput.jsx";
 
 // core components
 import timerStyle from "assets/jss/material-dashboard-react/components/timerStyle.jsx";
@@ -23,11 +24,37 @@ class Timer extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-          id: this.props.id
+          id: this.props.id,
+          name: this.props.name,
+          showTitle: true,
         };
+        this.handleChange = this.handleChange.bind(this);
+        this.handleTitleClick = this.handleTitleClick.bind(this);
     }
+
+    handleChange = name => event => {
+        this.setState({
+          [name]: event.target.value,
+        });
+    };
+
+    handleTitleClick = event => {
+        if (this.state.showTitle === true) {
+            this.setState({
+                showTitle: false,
+                isFocusedTitle: true,
+            });
+            
+        } else {
+            this.setState({
+                showTitle: true,
+                isFocusedTitle: false,
+            });
+        }
+    };
   
   render() {
+    
     const {
         classes,
         className,
@@ -46,7 +73,25 @@ class Timer extends React.Component {
                 <GridItem xs={6} sm={6} md={6}>
                 <div className={classes.timerTextWrapper}>
                     <div className={classes.timerText}>
-                        <span className={classes.timerTitle}>{name}</span>
+                        <span style={{display: this.state.showTitle ? 'block' : 'none' }} onClick={this.handleTitleClick} className={classes.timerTitle}>{this.state.name}</span>
+                        <span style={{display: this.state.showTitle ? 'none' : 'block' }}>
+                        <CustomInput
+                            id="title"
+                            inputProps={{
+                                placeholder: "Title",
+                                value: this.state.name,
+                                onChange: this.handleChange('name'),
+                                onBlur: this.handleTitleClick,
+                                className: classes.timerInput,
+                                autoFocus: this.state.isFocusedTitle,
+                                key: this.state.isFocusedTitle
+                            }}
+                            formControlProps={{
+                                fullWidth: true,
+                                className: classes.timerInput,
+                            }}
+                        />
+                        </span>
                     </div>
                 </div>
                 </GridItem>
@@ -68,7 +113,7 @@ class Timer extends React.Component {
                     title="Resume" 
                     aria-label="Resume"
                     className={classes.timerStartBtn}>
-                        <Fab size="large" color="secondary" className={classes.margin}>
+                        <Fab size="medium" color="secondary" className={classes.margin}>
                             <Icon>play_arrow</Icon>
                         </Fab>
                     </Tooltip>

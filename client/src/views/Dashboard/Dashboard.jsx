@@ -64,6 +64,8 @@ class Dashboard extends React.Component {
               </CardHeader>
               <CardBody>
                 <Timer time="02:08:15" name="My first timer" date="25.03.2019" dateStart="14:15" dateEnd="16:23" id={1} />
+                <Timer time="02:08:15" name="My first timer" date="25.03.2019" dateStart="14:15" dateEnd="16:23" id={2} />
+                <Timer time="02:08:15" name="My first timer" date="25.03.2019" dateStart="14:15" dateEnd="16:23" id={3} />
               </CardBody>
             </Card>
           </GridItem>
