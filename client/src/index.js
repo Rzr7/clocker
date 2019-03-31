@@ -3,13 +3,14 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
 import { createBrowserHistory } from "history";
+import UserFunctions from './app/UserFunctions';
 import { Route, Router, Switch } from 'react-router-dom'
 
 // core components
-import App from './layouts/App.jsx';
+/*import App from './layouts/App.jsx';
 import Login from './Login';
 import NotFound from './NotFound';
-import Logout from './Logout';
+import Logout from './Logout';*/
 
 import "./assets/css/material-dashboard-react.css";
 
@@ -18,10 +19,7 @@ const hist = createBrowserHistory();
 const routing = (
     <Router history={hist}>
       <Switch>
-        <Route exact path="/" component={Login} />
-        <Route path="/app" component={App} />
-        <Route path="/logout" component={Logout} />
-        <Route component={NotFound}/>
+        <UserFunctions />
       </Switch>
     </Router>
   )
