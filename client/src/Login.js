@@ -1,16 +1,19 @@
 import React, { Component } from 'react';
 import './App.css';
 import $ from "jquery";
-import axios from "axios";
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import checkAuth from './Functions'
+import { signup, login } from 'util/APIUtils';
+import { ACCESS_TOKEN } from 'constants/index.js';
 
 library.add(faCheck)
 
 class Login extends Component {
-  state = {};
+  constructor(props) {
+    super(props);
+  }
 
   componentDidMount() {
     checkAuth().then(function(result) {
@@ -141,48 +144,37 @@ class Login extends Component {
   }
 
   auth = () => {
-    axios.post('/users/auth', {
-      username: $('#name').val(),
-      password: $('#pass').val()
-    })
-    .then(function (response) {
-        if (response.data[0].status === "success") {
-            localStorage.setItem('session', response.data[0].token);
-            window.location.replace("/app");
-        }
-    })
-    .catch(function (error) {
-      $('#name').css('border', '2px solid red');
-      $('#pass').css('border', '2px solid red');
+    const loginRequest = {
+        usernameOrEmail: $('#name').val(),
+        password: $('#pass').val()
+    };
+    login(loginRequest)
+    .then(response => {
+        localStorage.setItem(ACCESS_TOKEN, response.accessToken);
+        this.props.history.push("/app/dashboard");
+        window.location.replace("/app/dashboard");
+    }).catch(error => {
+        
     });
   }
 
   register = () => {
-      axios.post('/users/user', {
-        username: $('#regname').val(),
-        password: $('#regpass').val(),
-        email: $('#regemail').val(),
-      })
-      .then(function (response) {
-        if (response.data[0].status === "success") {
-            localStorage.setItem('session', response.data[0].token);
-            window.location.replace("/app");
-        }
-      })
-      .catch(function (error) {
-        if (error.response.data[0].status === "error") {
-          if (error.response.data[1].username) {
-            $('#regname').css('border', '2px solid #ffeb00');
-          }
-          if (error.response.data[1].password) {
-            $('#regpass').css('border', '2px solid #ffeb00');
-          }
-          if (error.response.data[1].email) {
-            $('#regemail').css('border', '2px solid #ffeb00');
-          }
-        }
-      });
+    const signupRequest = {
+      name: $('#regname').val(),
+      email: $('#regemail').val(),
+      username: $('#regusername').val(),
+      password: $('#regpass').val()
+    };
+    signup(signupRequest)
+    .then(response => {
+      localStorage.setItem(ACCESS_TOKEN, response.accessToken);
+      this.props.history.push("/app/dashboard");
+      window.location.replace("/app/dashboard");
+    }).catch(error => {
+        
+    });
   }
+
   render() {
     return (
       <div className="App">
@@ -207,41 +199,47 @@ class Login extends Component {
                 <button onClick={this.auth}><span>GO</span> <FontAwesomeIcon icon="check" /></button>
             </div>
 
-            {/*<a href="" className="pass-forgot">Forgot your password?</a>*/}
-
           </div>
 
           <div className="overbox">
+          
             <div className="material-button alt-2"><span className="shape"></span></div>
 
             <div className="title">REGISTER</div>
 
             <div className="input">
-                <label for="regname">Username</label>
-                <input type="text" name="regname" id="regname" />
+                <label for="regusername">Username</label>
+                <input type="text" name="regusername" id="regusername"/>
+                <span className="spin"></span>
+            </div>
+
+            <div className="input">
+                <label for="regname">Name</label>
+                <input type="text" name="regname" id="regname"/>
                 <span className="spin"></span>
             </div>
 
             <div className="input">
                 <label for="regpass">Password</label>
-                <input type="password" name="regpass" id="regpass" />
+                <input type="password" name="regpass" id="regpass"/>
                 <span className="spin"></span>
             </div>
 
             <div className="input">
                 <label for="regemail">E-mail</label>
-                <input type="email" name="regemail" id="regemail" />
+                <input type="email" name="regemail" id="regemail"/>
                 <span className="spin"></span>
             </div>
 
             <div className="button">
-                <button onClick={this.register}><span>NEXT</span></button>
+                <button onClick={this.register} type="submit"><span>NEXT</span></button>
             </div>
           </div>
         </div>
       </div>
     );
   }
+
 }
 
 export default Login;

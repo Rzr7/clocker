@@ -1,5 +1,7 @@
 import React from 'react'
 
+import { ACCESS_TOKEN } from 'constants/index.js';
+
 class Logout extends React.Component {
 
     componentDidMount() {
@@ -7,7 +9,7 @@ class Logout extends React.Component {
     }
 
     logout = () => {
-        localStorage.removeItem('session');
+        localStorage.removeItem(ACCESS_TOKEN);
         localStorage.clear();
         window.location.replace("/");
     }
