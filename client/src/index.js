@@ -4,13 +4,7 @@ import './index.css';
 import * as serviceWorker from './serviceWorker';
 import { createBrowserHistory } from "history";
 import UserFunctions from './app/UserFunctions';
-import { Route, Router, Switch } from 'react-router-dom'
-
-// core components
-/*import App from './layouts/App.jsx';
-import Login from './Login';
-import NotFound from './NotFound';
-import Logout from './Logout';*/
+import { Router, Switch } from 'react-router-dom'
 
 import "./assets/css/material-dashboard-react.css";
 

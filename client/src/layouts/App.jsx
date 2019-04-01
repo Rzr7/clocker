@@ -20,14 +20,16 @@ import dashboardStyle from "assets/jss/material-dashboard-react/layouts/dashboar
 import image from "assets/img/sidebar-4.jpg";
 import logo from "assets/img/reactlogo.png";
 
-const switchRoutes = (
+import { getCurrentUser } from 'util/APIUtils';
+
+const switchRoutes = (currentUser) => (
   <Switch>
     {routes.map((prop, key) => {
       if (prop.layout === "/app") {
         return (
           <Route
             path={prop.layout + prop.path}
-            component={prop.component}
+            component={() => <prop.component currentUser={currentUser} />}
             key={key}
           />
         );
@@ -45,8 +47,30 @@ class Dashboard extends React.Component {
       hasImage: true,
       fixedClasses: "dropdown show",
       mobileOpen: false,
-      viewData: {}
+      viewData: {},
+      currentUser: null,
+      isAuthenticated: false,
+      isLoading: false
     };
+    this.loadCurrentUser = this.loadCurrentUser.bind(this);
+  }
+
+  loadCurrentUser() {
+    this.setState({
+      isLoading: true
+    });
+    getCurrentUser()
+    .then(response => {
+      this.setState({
+        currentUser: response,
+        isAuthenticated: true,
+        isLoading: false
+      });
+    }).catch(error => {
+      this.setState({
+        isLoading: false
+      });  
+    });
   }
   drawerToggle = () => {
     this.setState({ mobileOpen: !this.state.mobileOpen });
@@ -68,6 +92,7 @@ class Dashboard extends React.Component {
         this.setState({ viewData: result });
       }
     });
+    this.loadCurrentUser();
   }
   componentDidUpdate(e) {
     if (e.history.location.pathname !== e.location.pathname) {
@@ -104,7 +129,7 @@ class Dashboard extends React.Component {
             {...rest}
           />
             <div className={classes.content}>
-              <div className={classes.container}>{switchRoutes}</div>
+              <div className={classes.container}>{switchRoutes(this.state.currentUser)}</div>
             </div>
            <Footer />
         </div>

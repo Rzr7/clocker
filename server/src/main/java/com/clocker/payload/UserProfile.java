@@ -6,13 +6,15 @@ public class UserProfile {
     private Long id;
     private String username;
     private String name;
+    private String avatar;
     private Instant joinedAt;
 
-    public UserProfile(Long id, String username, String name, Instant joinedAt) {
+    public UserProfile(Long id, String username, String name, Instant joinedAt, String avatar) {
         this.id = id;
         this.username = username;
         this.name = name;
         this.joinedAt = joinedAt;
+        this.avatar = avatar;
     }
 
     public Long getId() {
@@ -47,4 +49,11 @@ public class UserProfile {
         this.joinedAt = joinedAt;
     }
 
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 }
