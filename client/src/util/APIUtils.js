@@ -1,9 +1,14 @@
-import { API_BASE_URL, ACCESS_TOKEN } from '../constants';
+import { API_BASE_URL, API_WITHOUT_API_URL, ACCESS_TOKEN } from '../constants';
 
 const request = (options) => {
-    const headers = new Headers({
-        'Content-Type': 'application/json',
-    })
+    const headers = new Headers();
+    if (!options.doNotAddContentType) {
+        var contentType = 'application/json'; 
+        if (options.contentType) {
+            contentType = options.contentType;
+        }
+        headers.append('Content-Type', contentType);
+    }
     
     if(localStorage.getItem(ACCESS_TOKEN)) {
         headers.append('Authorization', 'Bearer ' + localStorage.getItem(ACCESS_TOKEN))
@@ -50,6 +55,23 @@ export function checkEmailAvailability(email) {
     return request({
         url: API_BASE_URL + "/user/checkEmailAvailability?email=" + email,
         method: 'GET'
+    });
+}
+
+export function modifyProfile(profileRequest) {
+    return request({
+        url: API_BASE_URL + "/user/modifyProfile",
+        method: 'POST',
+        body: JSON.stringify(profileRequest)
+    });
+}
+
+export function uploadFile(fileRequest) {
+    return request({
+        url: API_WITHOUT_API_URL + "/uploadFile",
+        method: 'POST',
+        body: fileRequest,
+        doNotAddContentType: true
     });
 }
 
