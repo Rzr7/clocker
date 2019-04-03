@@ -85,7 +85,7 @@ public class AuthController {
 
         user.setRoles(Collections.singleton(userRole));
 
-        User result = userRepository.save(user);
+        userRepository.save(user);
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

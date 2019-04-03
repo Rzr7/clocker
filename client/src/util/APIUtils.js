@@ -87,6 +87,62 @@ export function getCurrentUser() {
     });
 }
 
+export function getTimers() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/timers",
+        method: 'GET'
+    });
+}
+
+export function setTimerTitle(id, timerRequest) {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/setTitle/" + id,
+        method: 'POST',
+        body: JSON.stringify(timerRequest),
+    });
+}
+
+export function stopTimer(id) {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/stop/" + id,
+        method: 'POST'
+    });
+}
+
+export function resumeTimer(id) {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/resume/" + id,
+        method: 'POST'
+    });
+}
+
+export function createTimer() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/add",
+        method: 'POST'
+    });
+}
+
 export function getUserProfile(username) {
     return request({
         url: API_BASE_URL + "/users/" + username,
