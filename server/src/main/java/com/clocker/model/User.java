@@ -6,8 +6,8 @@ import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -47,6 +47,12 @@ public class User extends DateAudit {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_timers",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "timer_id"))
+    private Set<Timer> timers = new HashSet<>();
 
     public User() {
 
@@ -121,5 +127,23 @@ public class User extends DateAudit {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public Set<Timer> getTimers() {
+        return timers;
+    }
+
+    public void setTimers(Set<Timer> timers) {
+        this.timers = timers;
+    }
+
+    public void endPreviousTimers() {
+        Date end_date = new Date();
+        for (Timer timer:
+             this.timers) {
+            if (timer.getEnd_at() == null) {
+                timer.setEnd_at(end_date);
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ const timerStyle = {
         height: "50px !important",
         marginTop: "15px",
         marginBottom: "15px",
-        position: "relative"
+        position: "relative" 
     },
     timerStartBtn: {
         position: "absolute !important",

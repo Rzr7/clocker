@@ -11,10 +11,6 @@ import { ACCESS_TOKEN } from 'constants/index.js';
 library.add(faCheck)
 
 class Login extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     checkAuth().then(function(result) {
         if (result) {
