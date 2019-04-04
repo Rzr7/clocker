@@ -18,7 +18,7 @@ import routes from "routes.js";
 import dashboardStyle from "assets/jss/material-dashboard-react/layouts/dashboardStyle.jsx";
 
 import image from "assets/img/sidebar-4.jpg";
-import logo from "assets/img/reactlogo.png";
+import logo from "assets/img/time-played.png";
 
 import { getCurrentUser } from 'util/APIUtils';
 

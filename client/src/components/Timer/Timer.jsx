@@ -13,7 +13,10 @@ import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
 import CustomInput from "components/CustomInput/CustomInput.jsx";
 import Moment from 'moment';
-import { setTimerTitle, stopTimer, resumeTimer } from 'util/APIUtils';
+import { setTimerTitle, stopTimer, resumeTimer, fetchTimer, updateTimerTime } from 'util/APIUtils';
+import DeleteIcon from '@material-ui/icons/Delete';
+import { TimePicker } from "material-ui-pickers";
+
 
 // core components
 import timerStyle from "assets/jss/material-dashboard-react/components/timerStyle.jsx";
@@ -32,11 +35,13 @@ class Timer extends React.Component {
           date: this.props.date,
           dateStart: this.props.dateStart,
           dateEnd: this.props.dateEnd,
-          time: this.props.time,
+          difference: this.props.time,
           timestamp: this.props.timestamp,
           timerButton: <Icon>play_arrow</Icon>,
           timerButtonTooltip: "Resume",
-          stopped: true,
+          stopped: this.props.stopped,
+          timepickerValueStart: Moment(this.props.dateStart, "HH:mm:ss"),
+          timepickerValueEnd: Moment(this.props.dateEnd, "HH:mm:ss")
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleTitleClick = this.handleTitleClick.bind(this);
@@ -44,6 +49,13 @@ class Timer extends React.Component {
         this.stopCurrentTimer = this.stopCurrentTimer.bind(this);
         this.stopCurrentTimer = this.stopCurrentTimer.bind(this);
         this.handleTimerButton = this.handleTimerButton.bind(this);
+        this.stopCurrentTimer = this.stopCurrentTimer.bind(this);
+        this.editStartTime = this.editStartTime.bind(this);
+        this.editEndTime = this.editEndTime.bind(this);
+        this.handleEndChange = this.handleEndChange.bind(this);
+        this.updateTimersTimeAfterTimepicker = this.updateTimersTimeAfterTimepicker.bind(this);
+        this.timePickerStart = React.createRef();
+        this.timePickerEnd = React.createRef();
     }
 
     handleChange = name => event => {
@@ -73,12 +85,12 @@ class Timer extends React.Component {
     componentDidMount() {
         if (this.state.dateEnd === null) {
             this.timer(); 
-            var intervalId = setInterval(this.timer, 1000);
+            this.intervalId = setInterval(() => this.timer(), 1000);
             this.setState({
-                intervalId: intervalId,
                 timerButton: <Icon>stop</Icon>,
                 timerButtonTooltip: "Stop",
-                stopped: false
+                stopped: false,
+                highlight: this.props.classes.timerActive
             });
         }
         this.props.onRef(this);
@@ -93,25 +105,16 @@ class Timer extends React.Component {
             var seconds = String(d.seconds()).padStart(2, '0');
             var s = hours + ':' + minutes + ':' + seconds;
             this.setState({
-                time: s
+                difference: s
             });
         }
     };
 
     stopCurrentTimer = () => {
         if (!this.state.stopped) {
-            if (this.state.intervalId !== null) {
-                clearInterval(this.state.intervalId);
-            }
-            this.setState({
-                dateEnd: Moment().format('HH:mm:ss'),
-                timerButtonTooltip: "Resume",
-                timerButton: <Icon>play_arrow</Icon>,
-                intervalId: null,
-            });
             stopTimer(this.state.id)
                 .then(response => {
-                    this.props.usertimers();
+                    this.updateTimer();
                 }).catch(error => {
                     
                 });
@@ -121,7 +124,7 @@ class Timer extends React.Component {
     resumeCurrentTimer = () => {
         resumeTimer(this.state.id)
             .then(response => {
-                this.props.usertimers();
+                this.updateTimer();
             }).catch(error => {
                 
             });
@@ -136,16 +139,78 @@ class Timer extends React.Component {
         }
     }
 
-    stopFromParent = () => {
-        this.stopCurrentTimer();
+    deleteCurrentTimer = () => {
+        this.props.removeMe(this.state.id);
+    }
+
+    editEndTime = () => {
+        this.timePickerEnd.current.open();
+    }
+
+    editStartTime = () => {
+        this.timePickerStart.current.open();
+    }
+
+    handleEndChange = date => {
+        this.setState({
+            timepickerValueEnd: date,
+        }, () => this.updateTimersTimeAfterTimepicker());
+    }
+
+    handleStartChange = date => {
+        this.setState({
+            timepickerValueStart: date,
+        }, () => this.updateTimersTimeAfterTimepicker());
+    }
+
+    updateTimersTimeAfterTimepicker = () => {
+        var updateData = {
+            start_time: this.state.timepickerValueStart.format(),
+            end_time: this.state.timepickerValueEnd.format(),
+        }
+        updateTimerTime(updateData, this.state.id).then(response => {
+            this.updateTimer();
+        });
+    }
+
+    updateTimer = () => {
+        fetchTimer(this.state.id)
+        .then(response => {
+            if (!this.state.stopped && response.end_time) {
+                this.setState({
+                    dateEnd: Moment().format('HH:mm:ss'),
+                    timerButtonTooltip: "Resume",
+                    timerButton: <Icon>play_arrow</Icon>,
+                    highlight: ''
+                });
+                clearInterval(this.state.intervalId);
+            }
+            this.setState({
+                name: response.title,
+                date: response.start_date,
+                dateStart: response.start_time,
+                dateEnd: response.end_time,
+                difference: response.difference,
+                timestamp: response.timestamp,
+                stopped: response.end_time ? true : false
+            });
+            this.props.userTimers();
+        });
     }
 
     componentWillUnmount() {
-        if (this.state.intervalId !== null) {
-            clearInterval(this.state.intervalId);
+        if (this.intervalId !== null) {
+            clearInterval(this.intervalId);
         }
         this.props.onRef(undefined);
     };
+
+    componentWillReceiveProps(props) {
+        const { refresh, id } = this.props;
+        if (props.refresh !== refresh) {
+          this.updateTimer();
+        }
+    }
   
   render() {
     
@@ -160,14 +225,18 @@ class Timer extends React.Component {
         id,
         onRef,
         stopTimers,
-        usertimers,
+        userTimers,
+        refresh,
+        stopped,
+        removeMe,
         ...rest
       } = this.props;
     return (
         <div className={classes.timerWrapper} {...rest}>
-        <Paper elevation={1}>
+        
+        <Paper elevation={1} className={classes.timerPaper + ' ' + this.state.highlight}>
             <GridContainer>
-                <GridItem xs={6} sm={6} md={6}>
+                <GridItem xs={5} sm={4} md={3}>
                 <div className={classes.timerTextWrapper}>
                     <div className={classes.timerText}>
                         <span style={{display: this.state.showTitle ? 'block' : 'none' }} onClick={this.handleTitleClick} className={classes.timerTitle}>{this.state.name}</span>
@@ -192,36 +261,27 @@ class Timer extends React.Component {
                     </div>
                 </div>
                 </GridItem>
-                <GridItem xs={3} sm={3} md={3}>
+                <GridItem xs={3} sm={3} md={5}>
                     <div className={classes.timerDate}>
                     <GridContainer>
-                        <GridItem xs={3} sm={3} md={3}>
+                        <GridItem xs={6} sm={6} md={4}>
                             <span className={classes.timerDay}>{this.state.date}</span>
                         </GridItem>
-                        <GridItem xs={5} sm={5} md={5}>
-                            <GridContainer>
-                                <GridItem xs={6} sm={6} md={5}>
-                                    {this.state.dateStart}
-                                </GridItem>
-                                <GridItem xs={6} sm={6} md={1}>
-                                    - 
-                                </GridItem>
-                                <GridItem xs={6} sm={6} md={5}>
-                                    {this.state.dateEnd}
-                                </GridItem>
-                            </GridContainer>
+                        <GridItem xs={6} sm={6} md={6}>
+                            <div className={classes.timerEnd}>
+                                <span className={classes.timerTimeHover} onClick={() => this.editStartTime()}>{this.state.dateStart}</span> - <span className={classes.timerTimeHover} onClick={() => this.editEndTime()}>{this.state.dateEnd}</span>
+                            </div>
                         </GridItem>
                     </GridContainer>
                     </div>
                          
                     
                 </GridItem>
-                <GridItem xs={2} sm={2} md={2}>
+                <GridItem xs={6} sm={4} md={1}>
                     <div className={classes.timerTime}>
-                        {this.state.time} h
+                        {this.state.difference} h
                     </div>
                 </GridItem>
-                <GridItem xs={1} sm={1} md={1}>
                     <Tooltip 
                     id="tooltip-top"
                     placement="top"
@@ -234,7 +294,36 @@ class Timer extends React.Component {
                             {this.state.timerButton}
                         </Fab>
                     </Tooltip>
-                </GridItem>
+                    <div className={classes.timerControls}>
+                        <Tooltip 
+                        id="tooltip-top"
+                        placement="top"
+                        classes={{ tooltip: classes.tooltip }}
+                        title="Delete"
+                        aria-label="Delete"
+                        onClick={() => this.deleteCurrentTimer()}
+                        >
+                            <DeleteIcon className={classes.icon} />
+                        </Tooltip>
+                        <TimePicker
+                        ampm={false}
+                        format="HH:mm:ss"
+                        label="24 hours"
+                        value={this.state.timepickerValueEnd}
+                        onChange={this.handleEndChange}
+                        className={classes.hidden}
+                        ref={this.timePickerEnd}
+                        />
+                        <TimePicker
+                        ampm={false}
+                        format="HH:mm:ss"
+                        label="24 hours"
+                        value={this.state.timepickerValueStart}
+                        onChange={this.handleStartChange}
+                        className={classes.hidden}
+                        ref={this.timePickerStart}
+                        />
+                    </div>
             </GridContainer>
         </Paper>
         </div>
