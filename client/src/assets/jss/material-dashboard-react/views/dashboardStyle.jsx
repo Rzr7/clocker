@@ -34,6 +34,11 @@ const dashboardStyle = {
       marginLeft: "3px"
     }
   },
+  timerCreateBtn: {
+    position: "absolute !important",
+    right: "12px",
+    top: "6px",
+},
   cardCategory: {
     color: grayColor[0],
     margin: "0",

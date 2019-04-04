@@ -132,6 +132,17 @@ export function resumeTimer(id) {
     });
 }
 
+export function deleteTimer(id) {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/delete/" + id,
+        method: 'DELETE'
+    });
+}
+
 export function createTimer() {
     if(!localStorage.getItem(ACCESS_TOKEN)) {
         return Promise.reject("No access token set.");
@@ -139,6 +150,41 @@ export function createTimer() {
 
     return request({
         url: API_BASE_URL + "/timer/add",
+        method: 'POST'
+    });
+}
+
+
+export function updateTimerTime(timerRequest, id) {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/update/time/" + id,
+        method: 'POST',
+        body: JSON.stringify(timerRequest),
+    });
+}
+
+export function fetchTimer(id) {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/timer/" + id,
+        method: 'GET'
+    });
+}
+
+export function stopAllTimers() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/stopAll",
         method: 'POST'
     });
 }
