@@ -67,7 +67,7 @@ public class UserPrincipal implements UserDetails {
     }
 
     public String getAvatar() {
-        return email;
+        return avatar;
     }
 
     @Override

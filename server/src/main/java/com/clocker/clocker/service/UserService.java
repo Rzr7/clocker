@@ -1,175 +1,102 @@
 package com.clocker.clocker.service;
 
-import com.clocker.clocker.dao.IUserDAO;
-import com.clocker.clocker.entity.*;
+import com.clocker.clocker.exception.AppException;
+import com.clocker.clocker.exception.ResourceNotFoundException;
+import com.clocker.clocker.model.Role;
+import com.clocker.clocker.model.RoleName;
+import com.clocker.clocker.model.User;
+import com.clocker.clocker.payload.ApiResponse;
+import com.clocker.clocker.payload.ProfileUpdateRequest;
+import com.clocker.clocker.payload.SignUpRequest;
+import com.clocker.clocker.repository.RoleRepository;
+import com.clocker.clocker.repository.UserRepository;
+import com.clocker.clocker.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Collections;
 
 @Service
-public class UserService implements IUserService {
+public class UserService {
 
     @Autowired
-    private IUserDAO userDAO;
+    private UserRepository userRepository;
 
-    @Override
-    public User getUserById(int id) {
-        User obj = userDAO.getUserById(id);
-        return obj;
-    }
+    @Autowired
+    RoleRepository roleRepository;
 
-    @Override
-    public List<User> getAllUsers(){
-        return userDAO.getAllUsers();
-    }
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
-    @Override
-    public synchronized boolean addUser(User user){
-        if (userDAO.userExists(user.getUsername(), user.getEmail())) {
-            return false;
-        } else {
-            userDAO.addUser(user);
-            return true;
-        }
-    }
+    public ResponseEntity<ApiResponse> updateUserProfile(UserPrincipal currentUser, ProfileUpdateRequest profileUpdateRequest) {
+        User user = this.getUserById(currentUser.getId());
 
-    @Override
-    public synchronized boolean authUser(LoginForm user){
-        if (userDAO.userExists(user.getUsername())) {
-            // if user exists check passwords
-            User userModel = userDAO.getUserByUsername(user.getUsername());
-            String inputPassword = user.getPassword();
-            boolean checkPassword = true;
-            if (checkPassword) {
-                return true;
+        if (!profileUpdateRequest.getEmail().isEmpty()) {
+            if(userRepository.existsByEmail(profileUpdateRequest.getEmail()) && !currentUser.getEmail().equals(profileUpdateRequest.getEmail())) {
+                return new ResponseEntity<>(new ApiResponse(false, "Email Address already in use!"),
+                        HttpStatus.BAD_REQUEST);
             }
+            user.setEmail(profileUpdateRequest.getEmail());
         }
-        return false;
-    }
-
-    @Override
-    public User getUserByUsername(String username){
-        if (userDAO.userExists(username)) {
-            User obj = userDAO.getUserByUsername(username);
-            return obj;
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public boolean isUserAuthenticated(Auth token){
-        AuthUser user = null;
-        if (token.getAuthToken() != null) {
-            user = userDAO.getUserByAuthToken(token.getAuthToken());
-        }
-
-        if (user != null) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public String getUserToken(LoginForm login){
-        String token = null;
-        if (login.getUsername() != null) {
-            token = userDAO.getUserAuthTokenByUsername(login.getUsername());
-        }
-
-        if (token != null) {
-            return token;
-        }
-        return null;
-    }
-
-    @Override
-    public String getUserToken(User user){
-        String token = null;
-        if (user.getUsername() != null) {
-            token = userDAO.getUserAuthTokenByUsername(user.getUsername());
-        }
-
-        if (token != null) {
-            return token;
-        }
-        return null;
-    }
-
-    @Override
-    public String generateUserToken(User user){
-        String token = null;
-        if (user.getUsername() != null) {
-            token = userDAO.generateUserToken(user.getUsername());
-        }
-
-        if (token != null) {
-            return token;
-        }
-        return null;
-    }
-
-    @Override
-    public String generateUserToken(LoginForm user){
-        String token = null;
-        if (user.getUsername() != null) {
-            token = userDAO.generateUserToken(user.getUsername());
-        }
-
-        if (token != null) {
-            return token;
-        }
-        return null;
-    }
-
-    @Override
-    public AuthUser getAuthenticatedUser(Auth token){
-        AuthUser user = null;
-        if (token.getAuthToken() != null) {
-            user = userDAO.getUserByAuthToken(token.getAuthToken());
-        }
-
-        if (user != null) {
-            return user;
-        }
-        return null;
-    }
-
-    @Override
-    public RegistrationErrors getRegistrationErrors(User user){
-        RegistrationErrors errors = new RegistrationErrors();
-
-        if (!(user.getUsername().length() > 0)) {
-            errors.setUsername(true);
-        }
-        if (!(user.getPassword().length() > 0)) {
-            errors.setPassword(true);
-        }
-        if (!(user.getEmail().length() > 0)) {
-            errors.setEmail(true);
-        }
-
-        if (!errors.isUsername()) {
-            if (userDAO.userExists(user.getUsername())) {
-                // Username already exists
-                errors.setUsername(true);
+        if (!profileUpdateRequest.getNew_password().isEmpty()) {
+            if (!profileUpdateRequest.getNew_password().equals(profileUpdateRequest.getConfirm_password())) {
+                return new ResponseEntity<>(new ApiResponse(false, "Passwords not equal!"),
+                        HttpStatus.BAD_REQUEST);
             }
+            user.setPassword(passwordEncoder.encode(profileUpdateRequest.getNew_password()));
+        }
+        if (!profileUpdateRequest.getName().isEmpty()) {
+            user.setName(profileUpdateRequest.getName());
         }
 
-        if (errors != null) {
-            return errors;
-        }
-        return null;
+        this.saveUser(user);
+
+        return new ResponseEntity<>(new ApiResponse(true, "User data modified!"),
+                HttpStatus.OK);
     }
 
-    @Override
-    public void updateUser(User user) {
-        userDAO.updateUser(user);
+    public User getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+
+        return user;
     }
 
-    @Override
-    public void deleteUser(int id) {
-        userDAO.deleteUser(id);
+    public User getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
+        return user;
+    }
+
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
+
+    public boolean isUserExistsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public boolean isUserExistsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    public User newUser(SignUpRequest signUpRequest) {
+        User user = new User(signUpRequest.getName(), signUpRequest.getUsername(),
+                signUpRequest.getEmail(), signUpRequest.getPassword());
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+                .orElseThrow(() -> new AppException("User Role not set."));
+
+        user.setRoles(Collections.singleton(userRole));
+
+        this.saveUser(user);
+
+        return user;
     }
 }

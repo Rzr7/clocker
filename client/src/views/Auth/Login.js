@@ -4,13 +4,31 @@ import $ from "jquery";
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
-import checkAuth from './Functions'
+import checkAuth from 'Functions'
 import { signup, login } from 'util/APIUtils';
 import { ACCESS_TOKEN } from 'constants/index.js';
 
 library.add(faCheck)
 
 class Login extends Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      username: '',
+      password: '',
+      email: '',
+      name: ''
+    };
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange = name => event => {
+    this.setState({
+      [name]: event.target.value,
+    });
+  };
+
   componentDidMount() {
     checkAuth().then(function(result) {
         if (result) {
@@ -141,8 +159,8 @@ class Login extends Component {
 
   auth = () => {
     const loginRequest = {
-        usernameOrEmail: $('#name').val(),
-        password: $('#pass').val()
+        usernameOrEmail: this.state.username,
+        password: this.state.password
     };
     login(loginRequest)
     .then(response => {
@@ -156,10 +174,10 @@ class Login extends Component {
 
   register = () => {
     const signupRequest = {
-      name: $('#regname').val(),
-      email: $('#regemail').val(),
-      username: $('#regusername').val(),
-      password: $('#regpass').val()
+      name: this.state.name,
+      email: this.state.email,
+      username: this.state.username,
+      password: this.state.password
     };
     signup(signupRequest)
     .then(response => {
@@ -180,14 +198,14 @@ class Login extends Component {
             <div className="title">LOGIN</div>
 
             <div className="input">
-                <label for="name">Username</label>
-                <input type="text" name="name" id="name" />
+                <label htmlFor="name">Username</label>
+                <input type="text" name="username" id="name" value={this.state.username} onChange={this.handleChange('username')} />
                 <span className="spin"></span>
             </div>
 
             <div className="input">
-                <label for="pass">Password</label>
-                <input type="password" name="pass" id="pass" />
+                <label htmlFor="pass">Password</label>
+                <input type="password" name="password" id="pass" value={this.state.password} onChange={this.handleChange('password')} />
                 <span className="spin"></span>
             </div>
 
@@ -204,26 +222,26 @@ class Login extends Component {
             <div className="title">REGISTER</div>
 
             <div className="input">
-                <label for="regusername">Username</label>
-                <input type="text" name="regusername" id="regusername"/>
+                <label htmlFor="regusername">Username</label>
+                <input type="text" name="username" id="regusername" value={this.state.username} onChange={this.handleChange('username')}/>
                 <span className="spin"></span>
             </div>
 
             <div className="input">
-                <label for="regname">Name</label>
-                <input type="text" name="regname" id="regname"/>
+                <label htmlFor="regname">Name</label>
+                <input type="text" name="name" id="regname" value={this.state.name} onChange={this.handleChange('name')}/>
                 <span className="spin"></span>
             </div>
 
             <div className="input">
-                <label for="regpass">Password</label>
-                <input type="password" name="regpass" id="regpass"/>
+                <label htmlFor="regpass">Password</label>
+                <input type="password" name="password" id="regpass" value={this.state.password} onChange={this.handleChange('password')}/>
                 <span className="spin"></span>
             </div>
 
             <div className="input">
-                <label for="regemail">E-mail</label>
-                <input type="email" name="regemail" id="regemail"/>
+                <label htmlFor="regemail">E-mail</label>
+                <input type="email" name="email" id="regemail" value={this.state.email} onChange={this.handleChange('email')}/>
                 <span className="spin"></span>
             </div>
 

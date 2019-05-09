@@ -17,7 +17,12 @@ public class UserTimers {
         List<TimerResponse> responseTimers = new ArrayList<TimerResponse>();
         for (Timer timer:
                 sortedList) {
-            responseTimers.add(new TimerResponse(timer.getId(), timer.getStart_at(), timer.getEnd_at(), timer.getTitle()));
+            TimerResponse timerResponse = new TimerResponse(timer.getId(), timer.getStartAt(), timer.getEndAt(), timer.getTitle());
+            if (timer.getCategory() != null) {
+                timerResponse.setCategory(timer.getCategory().getTitle());
+                timerResponse.setCategoryId(String.valueOf(timer.getCategory().getId()));
+            }
+            responseTimers.add(timerResponse);
         }
         return responseTimers;
     }

@@ -1,184 +1,148 @@
 package com.clocker.clocker.controller;
 
 import com.clocker.clocker.payload.*;
-import com.clocker.clocker.repository.TimerRepository;
-import com.clocker.clocker.repository.UserRepository;
-import com.clocker.clocker.exception.ResourceNotFoundException;
 import com.clocker.clocker.model.Timer;
 import com.clocker.clocker.model.User;
 import com.clocker.clocker.security.CurrentUser;
 import com.clocker.clocker.security.UserPrincipal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.clocker.clocker.service.TimerService;
+import com.clocker.clocker.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/timer")
 public class TimerController {
 
     @Autowired
-    private TimerRepository timerRepository;
+    private TimerService timerService;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
-
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private UserService userService;
 
     @PostMapping("/add")
     public ResponseEntity<?> addTimer(@CurrentUser UserPrincipal currentUser) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
-
-
-        user.endPreviousTimers();
-        // Create timer
-        Timer timer = new Timer();
-        timerRepository.save(timer);
-
-        //Add timer to current user
-        Set<Timer> userTimers = user.getTimers();
-        userTimers.add(timer);
-        user.setTimers(userTimers);
-        userRepository.save(user);
-
-        return new ResponseEntity(new TimerCreateResponse(true, "Timer create success!", new Date()),
-                HttpStatus.OK);
+        User user = userService.getUserByUsername(currentUser.getUsername());
+        if (timerService.addTimer(user)) {
+            return new ResponseEntity<>(new TimerCreateResponse(true, "Timer create success!", new Date()),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Unexpected error occurred"),
+                HttpStatus.NOT_FOUND);
     }
 
-    @GetMapping("/timers")
-    public UserTimers getUserTimers(@CurrentUser UserPrincipal currentUser) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
+    @GetMapping("/timers/{page}")
+    public UserTimers getUserTimers(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "page") Integer page) {
+        User user = userService.getUserByUsername(currentUser.getUsername());
 
-        UserTimers userTimers = new UserTimers(user.getTimers());
+        UserTimers userTimers = new UserTimers(user.getTimers(page));
 
         return userTimers;
     }
 
+    @GetMapping("/timers/pages")
+    public ResponseEntity<?> getUserTimers(@CurrentUser UserPrincipal currentUser) {
+        User user = userService.getUserByUsername(currentUser.getUsername());
+        Integer numberOfPages = user.getNumberOfPages();
+
+        return new ResponseEntity<>(String.valueOf(numberOfPages),
+                HttpStatus.OK);
+    }
+
+    @PostMapping("/setCategory/{timerId}")
+    public ResponseEntity<?> setTimerCategory(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "timerId") Long timerId, @RequestBody TimerCategoryUpdateRequest timerCategoryUpdateRequest) {
+        if (timerService.updateTimerCategory(currentUser, timerId, timerCategoryUpdateRequest)) {
+            return new ResponseEntity<>(new ApiResponse(true, "Timer update success!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Timer is not belongs to current user"),
+                HttpStatus.BAD_REQUEST);
+
+    }
+
     @PostMapping("/setTitle/{timerId}")
     public ResponseEntity<?> updateTitleTimer(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "timerId") Long timerId, @RequestBody TimerUpdateRequest timerUpdateRequest) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
-
-        Timer timer = timerRepository.findById(timerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timer", "id", timerId));
-        timer.setTitle(timerUpdateRequest.getTitle());
-        timerRepository.save(timer);
-
-
-        return new ResponseEntity(new ApiResponse(true, "Timer update success!"),
-                HttpStatus.OK);
+        if (timerService.updateTitleTimer(currentUser, timerId, timerUpdateRequest)) {
+            return new ResponseEntity<>(new ApiResponse(true, "Timer update success!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Timer is not belongs to current user"),
+                HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/stop/{timerId}")
     public ResponseEntity<?> stopTimer(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "timerId") Long timerId) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
-
-        Timer timer = timerRepository.findById(timerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timer", "id", timerId));
-        timer.stopTimer();
-        timerRepository.save(timer);
-
-        return new ResponseEntity(new ApiResponse(true, "Timer stop success!"),
-                HttpStatus.OK);
+        if (timerService.stopTimer(currentUser, timerId)) {
+            return new ResponseEntity<>(new ApiResponse(true, "Timer stop success!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Timer is not belongs to current user"),
+                HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/resume/{timerId}")
     public ResponseEntity<?> resumeTimer(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "timerId") Long timerId) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
-
-        user.endPreviousTimers();
-        Timer oldTimer = timerRepository.findById(timerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timer", "id", timerId));
-
-        Timer newTimer = new Timer(oldTimer.getTitle());
-        timerRepository.save(newTimer);
-
-        Set<Timer> userTimers = user.getTimers();
-        userTimers.add(newTimer);
-        user.setTimers(userTimers);
-        userRepository.save(user);
-
-        return new ResponseEntity(new TimerCreateResponse(true, "Timer resume success!", new Date()),
-                HttpStatus.OK);
+        if (timerService.resumeTimer(currentUser, timerId)) {
+            return new ResponseEntity<>(new ApiResponse(true, "Timer resume success!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Timer is not belongs to current user"),
+                HttpStatus.BAD_REQUEST);
     }
 
     @GetMapping("/timer/{timerId}")
     public TimerResponse timerData(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "timerId") Long timerId) {
-        Timer timer = timerRepository.findById(timerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timer", "id", timerId));
+        Timer timer = timerService.getTimerById(timerId);
+        TimerResponse timerResponse = new TimerResponse(timer.getId(), timer.getStartAt(), timer.getEndAt(), timer.getTitle());
+        if (timer.getCategory() != null) {
+            timerResponse.setCategory(timer.getCategory().getTitle());
+            timerResponse.setCategoryId(String.valueOf(timer.getCategory().getId()));
+        }
 
-        return new TimerResponse(timer.getId(), timer.getStart_at(), timer.getEnd_at(), timer.getTitle());
+        return timerResponse;
     }
 
     @PostMapping("/update/time/{timerId}")
     public ResponseEntity<?> timerUpdateTime(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "timerId") Long timerId, @RequestBody TimerUpdateEndTimeRequest timerUpdateEndTimeRequest) {
-        Timer timer = timerRepository.findById(timerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timer", "id", timerId));
-        timer.stopTimer();
-        timer.setStart_at(timerUpdateEndTimeRequest.getStart_time());
-        timer.setEnd_at(timerUpdateEndTimeRequest.getEnd_time());
-        timerRepository.save(timer);
-
-        return new ResponseEntity(new ApiResponse(true, "Timer update success!"),
-                HttpStatus.OK);
+        if (timerService.timerUpdateTime(currentUser, timerId, timerUpdateEndTimeRequest)) {
+            return new ResponseEntity<>(new ApiResponse(true, "Timer update success!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Error occurred"),
+                HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/stopAll")
     public ResponseEntity<?> stopAll(@CurrentUser UserPrincipal currentUser) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
-
-        user.endPreviousTimers();
-
-        return new ResponseEntity(new ApiResponse(true, "All timers stopped successfully!"),
-                HttpStatus.OK);
+        if (timerService.stopAll(currentUser)) {
+            return new ResponseEntity<>(new ApiResponse(true, "All timers stopped successfully!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Error occurred"),
+                HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/delete/{timerId}")
     public ResponseEntity<?> deleteTimer(@CurrentUser UserPrincipal currentUser, @PathVariable(value = "timerId") Long timerId) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
-
-        Timer timer = timerRepository.findById(timerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timer", "id", timerId));
-        timer.stopTimer();
-        timerRepository.delete(timer);
-
-        Set<Timer> userTimers = user.getTimers();
-        userTimers.remove(timer);
-        user.setTimers(userTimers);
-        userRepository.save(user);
-
-        return new ResponseEntity(new ApiResponse(true, "Timer delete success!"),
-                HttpStatus.OK);
+        if (timerService.deleteTimer(currentUser, timerId)) {
+            return new ResponseEntity<>(new ApiResponse(true, "Timer delete success!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Error occurred"),
+                HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/delete/all")
     public ResponseEntity<?> deleteTimer(@CurrentUser UserPrincipal currentUser) {
-        User user = userRepository.findByUsername(currentUser.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", currentUser.getUsername()));
-
-        timerRepository.deleteAll();
-
-        Set<Timer> userTimers = user.getTimers();
-        userTimers.clear();
-        user.setTimers(userTimers);
-        userRepository.save(user);
-
-        return new ResponseEntity(new ApiResponse(true, "Timer delete success!"),
-                HttpStatus.OK);
+        if (timerService.deleteTimer(currentUser)) {
+            return new ResponseEntity<>(new ApiResponse(true, "Timer delete success!"),
+                    HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new ApiResponse(false, "Error occurred"),
+                HttpStatus.BAD_REQUEST);
     }
 }

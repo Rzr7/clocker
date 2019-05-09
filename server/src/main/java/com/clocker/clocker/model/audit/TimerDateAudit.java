@@ -10,32 +10,32 @@ import java.util.Date;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @JsonIgnoreProperties(
-        value = {"start_at", "end_at"},
+        value = {"startAt", "endAt"},
         allowGetters = true
 )
 public abstract class TimerDateAudit implements Serializable {
 
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
-    private Date start_at;
+    private Date startAt;
 
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
-    private Date end_at;
+    private Date endAt;
 
-    public Date getStart_at() {
-        return start_at;
+    public Date getStartAt() {
+        return startAt;
     }
 
-    public void setStart_at(Date start_at) {
-        this.start_at = start_at;
+    public void setStartAt(Date startAt) {
+        this.startAt = startAt;
     }
 
-    public Date getEnd_at() {
-        return end_at;
+    public Date getEndAt() {
+        return endAt;
     }
 
-    public void setEnd_at(Date end_at) {
-        this.end_at = end_at;
+    public void setEndAt(Date endAt) {
+        this.endAt = endAt;
     }
 }

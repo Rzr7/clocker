@@ -7,6 +7,10 @@ const timerStyle = {
         paddingRight: "25px !important",
         lineHeight: "50px",
     },
+    timerCategory: {
+        fontSize: "16px",
+        lineHeight: "50px",
+    },
     timerWrapper: {
         height: "50px !important",
         marginTop: "15px",

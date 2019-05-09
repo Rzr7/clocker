@@ -87,13 +87,35 @@ export function getCurrentUser() {
     });
 }
 
-export function getTimers() {
+export function getTimers(page) {
     if(!localStorage.getItem(ACCESS_TOKEN)) {
         return Promise.reject("No access token set.");
     }
 
     return request({
-        url: API_BASE_URL + "/timer/timers",
+        url: API_BASE_URL + "/timer/timers/" + page,
+        method: 'GET'
+    });
+}
+
+export function getTotalPages() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/timers/pages",
+        method: 'GET'
+    });
+}
+
+export function getCategories() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/category/all",
         method: 'GET'
     });
 }
@@ -105,6 +127,18 @@ export function setTimerTitle(id, timerRequest) {
 
     return request({
         url: API_BASE_URL + "/timer/setTitle/" + id,
+        method: 'POST',
+        body: JSON.stringify(timerRequest),
+    });
+}
+
+export function setTimerCategory(id, timerRequest) {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/timer/setCategory/" + id,
         method: 'POST',
         body: JSON.stringify(timerRequest),
     });
@@ -192,6 +226,138 @@ export function stopAllTimers() {
 export function getUserProfile(username) {
     return request({
         url: API_BASE_URL + "/users/" + username,
+        method: 'GET'
+    });
+}
+
+export function reportCurYear() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/date/curYear",
+        method: 'GET'
+    });
+}
+
+export function reportPrevYear() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/date/prevYear",
+        method: 'GET'
+    });
+}
+
+export function reportCurMonth() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/date/curMonth",
+        method: 'GET'
+    });
+}
+
+export function reportPrevMonth() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/date/prevMonth",
+        method: 'GET'
+    });
+}
+
+export function reportCurWeek() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/date/curWeek",
+        method: 'GET'
+    });
+}
+
+export function reportPrevWeek() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/date/prevWeek",
+        method: 'GET'
+    });
+}
+
+export function reportCurYearCategory() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/category/curYear",
+        method: 'GET'
+    });
+}
+
+export function reportPrevYearCategory() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/category/prevYear",
+        method: 'GET'
+    });
+}
+
+export function reportCurMonthCategory() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/category/curMonth",
+        method: 'GET'
+    });
+}
+
+export function reportPrevMonthCategory() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/category/prevMonth",
+        method: 'GET'
+    });
+}
+
+export function reportCurWeekCategory() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/category/curWeek",
+        method: 'GET'
+    });
+}
+
+export function reportPrevWeekCategory() {
+    if(!localStorage.getItem(ACCESS_TOKEN)) {
+        return Promise.reject("No access token set.");
+    }
+
+    return request({
+        url: API_BASE_URL + "/report/category/prevWeek",
         method: 'GET'
     });
 }

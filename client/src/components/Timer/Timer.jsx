@@ -4,6 +4,9 @@ import React from "react";
 // @material-ui/core components
 import withStyles from "@material-ui/core/styles/withStyles";
 import Paper from '@material-ui/core/Paper';
+import Menu from "@material-ui/core/Menu";
+import Popover from "@material-ui/core/Popover";
+import MenuItem from "@material-ui/core/MenuItem";
 // @material-ui/icons
 
 import Tooltip from '@material-ui/core/Tooltip';
@@ -13,7 +16,7 @@ import GridItem from "components/Grid/GridItem.jsx";
 import GridContainer from "components/Grid/GridContainer.jsx";
 import CustomInput from "components/CustomInput/CustomInput.jsx";
 import Moment from 'moment';
-import { setTimerTitle, stopTimer, resumeTimer, fetchTimer, updateTimerTime } from 'util/APIUtils';
+import { setTimerTitle, setTimerCategory, stopTimer, resumeTimer, fetchTimer, updateTimerTime } from 'util/APIUtils';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { TimePicker } from "material-ui-pickers";
 
@@ -31,7 +34,11 @@ class Timer extends React.Component {
         this.state = {
           id: this.props.id,
           name: this.props.name,
+          category: this.props.category,
+          categoryId: this.props.categoryId,
+          allCategories: this.props.allCategories,
           showTitle: true,
+          showCategory: true,
           date: this.props.date,
           dateStart: this.props.dateStart,
           dateEnd: this.props.dateEnd,
@@ -41,10 +48,13 @@ class Timer extends React.Component {
           timerButtonTooltip: "Resume",
           stopped: this.props.stopped,
           timepickerValueStart: Moment(this.props.dateStart, "HH:mm:ss"),
-          timepickerValueEnd: Moment(this.props.dateEnd, "HH:mm:ss")
+          timepickerValueEnd: Moment(this.props.dateEnd, "HH:mm:ss"),
+          openCategory: false,
+          anchorEl: null
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleTitleClick = this.handleTitleClick.bind(this);
+        this.handleCategoryClick = this.handleCategoryClick.bind(this);
         this.timer = this.timer.bind(this);
         this.stopCurrentTimer = this.stopCurrentTimer.bind(this);
         this.stopCurrentTimer = this.stopCurrentTimer.bind(this);
@@ -82,6 +92,35 @@ class Timer extends React.Component {
         }
     };
 
+    handleCategoryClick = event => {
+        if (this.state.showCategory === true) {
+            this.setState({
+                showCategory: false,
+                isFocusedCategory: true,
+            });
+        } else {
+            this.setState({
+                showCategory: true,
+                isFocusedCategory: false,
+            });
+        }
+    };
+
+    handleCategorySelect = (event) => {
+        this.setState({ 
+            openCategory: false,
+            showCategory: true,
+            isFocusedCategory: false,
+            categoryId: event.target.getAttribute('data-name'),
+            category: event.target.getAttribute('data-value')
+        });
+        var data = {
+            category: this.state.categoryId
+        };
+        this.handleCloseCategory();
+        setTimerCategory(this.state.id, data);
+    };
+
     componentDidMount() {
         if (this.state.dateEnd === null) {
             this.timer(); 
@@ -115,6 +154,7 @@ class Timer extends React.Component {
             stopTimer(this.state.id)
                 .then(response => {
                     this.updateTimer();
+                    this.props.userTimers();
                 }).catch(error => {
                     
                 });
@@ -125,6 +165,7 @@ class Timer extends React.Component {
         resumeTimer(this.state.id)
             .then(response => {
                 this.updateTimer();
+                this.props.userTimers();
             }).catch(error => {
                 
             });
@@ -164,9 +205,18 @@ class Timer extends React.Component {
     }
 
     updateTimersTimeAfterTimepicker = () => {
+        var startTime = this.state.timepickerValueStart;
+        var endTime = this.state.timepickerValueEnd;
+        if (!startTime.isValid()) {
+            startTime = Moment();
+        }
+        if (!endTime.isValid()) {
+            endTime = Moment();
+        }
+
         var updateData = {
-            start_time: this.state.timepickerValueStart.format(),
-            end_time: this.state.timepickerValueEnd.format(),
+            start_time: startTime.format(),
+            end_time: endTime.format(),
         }
         updateTimerTime(updateData, this.state.id).then(response => {
             this.updateTimer();
@@ -194,7 +244,7 @@ class Timer extends React.Component {
                 timestamp: response.timestamp,
                 stopped: response.end_time ? true : false
             });
-            this.props.userTimers();
+            //this.props.userTimers();
         });
     }
 
@@ -206,60 +256,121 @@ class Timer extends React.Component {
     };
 
     componentWillReceiveProps(props) {
-        const { refresh, id } = this.props;
+        const { refresh } = this.props;
         if (props.refresh !== refresh) {
           this.updateTimer();
         }
     }
+    
+    handleCloseCategory = () => {
+        this.setState({ anchorEl: null });
+    };
+
+    handleCategoryDropdown = (event) => {
+        this.setState({ anchorEl: event.currentTarget });
+    };
   
   render() {
     
     const {
-        classes,
-        className,
-        time,
-        date,
-        dateStart,
-        dateEnd,
-        name,
-        id,
-        onRef,
-        stopTimers,
-        userTimers,
-        refresh,
-        stopped,
-        removeMe,
-        ...rest
+        classes
       } = this.props;
+    const {
+        anchorEl
+      } = this.state;
     return (
-        <div className={classes.timerWrapper} {...rest}>
+        <div className={classes.timerWrapper}>
         
         <Paper elevation={1} className={classes.timerPaper + ' ' + this.state.highlight}>
             <GridContainer>
-                <GridItem xs={5} sm={4} md={3}>
-                <div className={classes.timerTextWrapper}>
-                    <div className={classes.timerText}>
-                        <span style={{display: this.state.showTitle ? 'block' : 'none' }} onClick={this.handleTitleClick} className={classes.timerTitle}>{this.state.name}</span>
-                        <span style={{display: this.state.showTitle ? 'none' : 'block' }}>
-                        <CustomInput
-                            id="title"
-                            inputProps={{
-                                placeholder: "Title",
-                                value: this.state.name,
-                                onChange: this.handleChange('name'),
-                                onBlur: this.handleTitleClick,
-                                className: classes.timerInput,
-                                autoFocus: this.state.isFocusedTitle,
-                                key: this.state.isFocusedTitle
-                            }}
-                            formControlProps={{
-                                fullWidth: true,
-                                className: classes.timerInput,
-                            }}
-                        />
-                        </span>
-                    </div>
-                </div>
+                <GridItem xs={5} sm={4} md={5}>
+                    <GridContainer>
+                        <GridItem xs={6} sm={6} md={6}>
+                            <div className={classes.timerTextWrapper}>
+                                <div className={classes.timerText}>
+                                    <span style={{display: this.state.showTitle ? 'block' : 'none' }} onClick={this.handleTitleClick} className={classes.timerTitle}>{this.state.name}</span>
+                                    <span style={{display: this.state.showTitle ? 'none' : 'block' }}>
+                                    <CustomInput
+                                        id="title"
+                                        inputProps={{
+                                            placeholder: "Title",
+                                            value: this.state.name,
+                                            onChange: this.handleChange('name'),
+                                            onBlur: this.handleTitleClick,
+                                            className: classes.timerInput,
+                                            autoFocus: this.state.isFocusedTitle,
+                                            key: this.state.isFocusedTitle
+                                        }}
+                                        formControlProps={{
+                                            fullWidth: true,
+                                            className: classes.timerInput,
+                                        }}
+                                    />
+                                    </span>
+                                </div>
+                            </div>
+                        </GridItem>
+                        <GridItem xs={6} sm={6} md={6}>
+                            <div className={classes.timerTextWrapper}>
+                                <div className={classes.timerText} >
+                                    <span style={{display: this.state.showCategory ? 'block' : 'none' }} 
+                                        onClick={this.handleCategoryClick} 
+                                        className={classes.timerCategory}>
+                                            {this.state.category === null ? 'No Category' : this.state.category}
+                                    </span>
+                                    <span style={{display: this.state.showCategory ? 'none' : 'block' }}>
+                                    <CustomInput
+                                        id="category"
+                                        inputProps={{
+                                            placeholder: "Category",
+                                            value: this.state.category === null ? 'No Category' : this.state.category,
+                                            onChange: this.handleChange('category'),
+                                            onBlur: this.handleCategoryClick,
+                                            onClick: this.handleCategoryDropdown,
+                                            className: classes.timerInput,
+                                            autoFocus: this.state.isFocusedCategory,
+                                            key: this.state.isFocusedCategory
+                                        }}
+                                        formControlProps={{
+                                            fullWidth: true,
+                                            className: classes.timerInput,
+                                        }}
+                                    />
+                                    <Popover 
+                                            open={Boolean(anchorEl)}
+                                            anchorEl={anchorEl}
+                                            onClose={this.handleCloseCategory}
+                                            anchorReference={anchorEl}
+                                            anchorOrigin={{
+                                                vertical: 'bottom',
+                                                horizontal: 'center',
+                                            }}
+                                            transformOrigin={{
+                                                vertical: 'top',
+                                                horizontal: 'center',
+                                            }}
+                                            >
+       
+                                        { this.state.allCategories.map((category, i) => {
+                                            return <MenuItem
+                                                key={i}
+                                                className={classes.dropdownItem}
+                                                data-name={category.id}
+                                                onClick={(event) => this.handleCategorySelect(event) }
+                                                data-value={category.title}
+                                                value={category.title}
+                                                >
+                                                {category.title}
+                                            </MenuItem>
+                                        })
+                                        }
+
+                                    </Popover>
+                                    </span>
+                                </div>
+                            </div>
+                        </GridItem>
+                    </GridContainer>
                 </GridItem>
                 <GridItem xs={3} sm={3} md={5}>
                     <div className={classes.timerDate}>
@@ -330,13 +441,5 @@ class Timer extends React.Component {
     );
   }
 }
-/*
-Timer.propTypes = {
-  classes: PropTypes.object.isRequired,
-  className: PropTypes.string,
-  date: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  id: PropTypes.number.isRequired,
-};
-*/
+
 export default withStyles(timerStyle)(Timer);

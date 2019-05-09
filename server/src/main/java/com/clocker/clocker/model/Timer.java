@@ -18,14 +18,20 @@ public class Timer extends TimerDateAudit {
     @Size(max = 40)
     private String title;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinTable(name = "timers_categories",
+            joinColumns = @JoinColumn(name = "timer_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private Category category;
+
     public Timer() {
         this.title = "New Timer";
-        this.setStart_at(new Date());
+        this.setStartAt(new Date());
     }
 
     public Timer(String title) {
         this.title = title;
-        this.setStart_at(new Date());
+        this.setStartAt(new Date());
     }
 
     public Long getId() {
@@ -45,9 +51,16 @@ public class Timer extends TimerDateAudit {
     }
 
     public void stopTimer() {
-        if (this.getEnd_at() == null) {
-            this.setEnd_at(new Date());
+        if (this.getEndAt() == null) {
+            this.setEndAt(new Date());
         }
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 }
