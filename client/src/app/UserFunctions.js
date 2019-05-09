@@ -8,10 +8,10 @@ import {
 import { getCurrentUser } from 'util/APIUtils';
 import { ACCESS_TOKEN } from 'constants/index.js';
 
-import Login from 'Login';
+import Login from 'views/Auth/Login';
 import App from 'layouts/App.jsx';
 import NotFound from 'NotFound';
-import Logout from 'Logout';
+import Logout from 'views/Auth/Logout';
 
 class UserFunctions extends Component {
   constructor(props) {

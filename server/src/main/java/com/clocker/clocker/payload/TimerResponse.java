@@ -1,23 +1,29 @@
 package com.clocker.clocker.payload;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.Period;
-import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+
+import static java.lang.Math.toIntExact;
 
 public class TimerResponse {
     private Long id;
     private Date start_at;
+    private String dayOfMonth;
+    private String dayOfWeek;
+    private String weekOfYear;
+    private String month;
+    private String year;
     private Date end_at;
     private String title;
     private String start_date;
     private String start_time;
     private String end_time;
     private String difference;
+    private String category;
+    private String categoryId;
+    private Integer hoursDifference = 0;
 
     public TimerResponse(Long id, Date start_at, Date end_at, String title) {
         this.id = id;
@@ -31,9 +37,16 @@ public class TimerResponse {
         int year = cal.get(Calendar.YEAR);
         int month = cal.get(Calendar.MONTH);
         int day = cal.get(Calendar.DAY_OF_MONTH);
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        int weekOfYear = cal.get(Calendar.WEEK_OF_YEAR);
         int hour = cal.get(Calendar.HOUR_OF_DAY);
         int minute = cal.get(Calendar.MINUTE);
         int seconds = cal.get(Calendar.SECOND);
+        this.year = String.valueOf(year);
+        this.month = String.valueOf(month);
+        this.dayOfWeek = String.valueOf(dayOfWeek);
+        this.dayOfMonth = String.valueOf(day);
+        this.weekOfYear = String.valueOf(weekOfYear);
         this.start_date = String.format("%02d.%02d.%04d", day, month + 1, year);
         this.start_time = String.format("%02d:%02d:%02d", hour, minute, seconds);
 
@@ -55,6 +68,7 @@ public class TimerResponse {
                     TimeUnit.MILLISECONDS.toSeconds(millis) -
                             TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
 
+            this.hoursDifference = toIntExact(TimeUnit.MILLISECONDS.toHours(millis));
         }
     }
 
@@ -121,5 +135,69 @@ public class TimerResponse {
 
     public void setDifference(String difference) {
         this.difference = difference;
+    }
+
+    public Integer getHoursDifference() {
+        return hoursDifference;
+    }
+
+    public void setHoursDifference(Integer hoursDifference) {
+        this.hoursDifference = hoursDifference;
+    }
+
+    public String getDayOfMonth() {
+        return dayOfMonth;
+    }
+
+    public void setDayOfMonth(String dayOfMonth) {
+        this.dayOfMonth = dayOfMonth;
+    }
+
+    public String getDayOfWeek() {
+        return dayOfWeek;
+    }
+
+    public void setDayOfWeek(String dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public void setMonth(String month) {
+        this.month = month;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public String getWeekOfYear() {
+        return weekOfYear;
+    }
+
+    public void setWeekOfYear(String weekOfYear) {
+        this.weekOfYear = weekOfYear;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(String categoryId) {
+        this.categoryId = categoryId;
     }
 }

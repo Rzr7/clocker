@@ -7,6 +7,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -52,6 +53,9 @@ public class User extends DateAudit {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "timer_id"))
     private Set<Timer> timers = new HashSet<>();
+
+    @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER)
+    private Set<Category> categories = new HashSet<>();
 
     public User() {
 
@@ -132,6 +136,30 @@ public class User extends DateAudit {
         return timers;
     }
 
+    public Integer getNumberOfPages() {
+        return Math.round(timers.size() / 15);
+    }
+
+    public Set<Timer> getTimers(Integer page) {
+        page = page - 1;
+        Integer startObject = page * 15;
+        List<Timer> sortedList = timers.stream().sorted(Comparator.comparing(Timer::getId).reversed()).collect(Collectors.toList());
+        Set<Timer> timersList = new HashSet<Timer>();
+        for (Integer i = 0; i < (startObject + 15); i++) {
+            if (i < startObject) {
+                continue;
+            }
+            if (i < timers.size()) {
+                timersList.add(sortedList.get(i));
+            }
+        }
+        return timersList;
+    }
+
+    public boolean isOwner(Timer timer) {
+        return timers.contains(timer);
+    }
+
     public void setTimers(Set<Timer> timers) {
         this.timers = timers;
     }
@@ -140,9 +168,17 @@ public class User extends DateAudit {
         Date end_date = new Date();
         for (Timer timer:
              this.timers) {
-            if (timer.getEnd_at() == null) {
-                timer.setEnd_at(end_date);
+            if (timer.getEndAt() == null) {
+                timer.setEndAt(end_date);
             }
         }
+    }
+
+    public Set<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
     }
 }
